@@ -1,0 +1,46 @@
+# Node
+node_modules/
+dist/
+coverage/
+
+# React / Vite
+.vite/
+
+# .NET
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+
+# Docker
+docker-data/
+
+# Test results
+TestResults/
+
+# Coverage
+coverage/
+
+# SQL
+*.mdf
+*.ldf
