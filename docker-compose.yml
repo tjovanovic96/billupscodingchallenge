@@ -16,7 +16,7 @@ services:
       start_period: 30s
 
   backend:
-    build: ./BillupsCodingChallenge
+    build: ./backend
     ports:
       - "8080:8080"
     environment:
