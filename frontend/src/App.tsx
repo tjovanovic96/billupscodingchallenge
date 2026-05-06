@@ -1,66 +1,23 @@
-import { useState, useEffect, useCallback } from 'react'
 import { UsernameInput } from './components/UsernameInput'
 import { ChoiceButtons } from './components/ChoiceButtons'
 import { ResultCard } from './components/ResultCard'
 import { Scoreboard } from './components/Scoreboard'
-import { play, getScoreboard, resetScoreboard } from './api'
-import type { PlayResult, ScoreboardEntry } from './types'
+import { useApp } from './useApp'
 
 export default function App() {
-  const [username, setUsername] = useState('')
-
-  const [result, setResult] = useState<PlayResult | null>(null)
-  const [playLoading, setPlayLoading] = useState(false)
-  const [playError, setPlayError] = useState<string | null>(null)
-
-  const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([])
-  const [boardLoading, setBoardLoading] = useState(false)
-  const [boardError, setBoardError] = useState<string | null>(null)
-
-  const fetchScoreboard = useCallback(async () => {
-    setBoardLoading(true)
-    setBoardError(null)
-    try {
-      const data = await getScoreboard()
-      setScoreboard(data)
-    } catch (err) {
-      setBoardError(err instanceof Error ? err.message : 'Failed to load scoreboard')
-    } finally {
-      setBoardLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchScoreboard()
-  }, [fetchScoreboard])
-
-  async function handleChoice(choiceId: number) {
-    setPlayLoading(true)
-    setPlayError(null)
-    try {
-      const res = await play(username.trim(), choiceId)
-      setResult(res)
-      await fetchScoreboard()
-    } catch (err) {
-      setPlayError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setPlayLoading(false)
-    }
-  }
-
-  async function handleReset() {
-    setBoardLoading(true)
-    setBoardError(null)
-    try {
-      await resetScoreboard()
-      setScoreboard([])
-      setResult(null)
-    } catch (err) {
-      setBoardError(err instanceof Error ? err.message : 'Failed to reset scoreboard')
-    } finally {
-      setBoardLoading(false)
-    }
-  }
+  const {
+    username,
+    setUsername,
+    result,
+    playLoading,
+    playError,
+    scoreboard,
+    boardLoading,
+    boardError,
+    handleChoice,
+    handleReset,
+    fetchScoreboard,
+  } = useApp()
 
   return (
     <div className="app">

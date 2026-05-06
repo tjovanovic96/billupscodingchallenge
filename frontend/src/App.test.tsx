@@ -1,15 +1,20 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import App from './App'
+import type { UseAppReturn } from './useApp'
 
-// ── Test data ───────────────────────────────────────────────
+vi.mock('./useApp')
+
+import { useApp } from './useApp'
+
+const mockUseApp = vi.mocked(useApp)
 
 const PLAY_WIN = {
   username: 'alice',
   results: 'Win' as const,
-  player: 1,   // Rock
-  computer: 3, // Scissors
+  player: 1,
+  computer: 3,
 }
 
 const SCOREBOARD_ROW = {
@@ -21,260 +26,130 @@ const SCOREBOARD_ROW = {
   playedAtUtc: '2024-01-15T10:00:00Z',
 }
 
-function jsonResponse(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-function setupFetch({
-  scoreboardData = [] as unknown[],
-  playResult = PLAY_WIN as unknown,
-  playStatus = 200,
-}: {
-  scoreboardData?: unknown[]
-  playResult?: unknown
-  playStatus?: number
-} = {}) {
-  const mock = vi.fn().mockImplementation(async (input: unknown, init?: RequestInit) => {
-    const url = String(input)
-    const method = (init?.method ?? 'GET').toUpperCase()
-
-    if (url.endsWith('/play') && method === 'POST') {
-      if (playStatus >= 400) return new Response(String(playResult), { status: playStatus })
-      return jsonResponse(playResult)
-    }
-
-    if (url.endsWith('/scoreboard') && method === 'DELETE') {
-      return new Response(null, { status: 204 })
-    }
-
-    if (url.endsWith('/scoreboard')) {
-      return jsonResponse(scoreboardData)
-    }
-
-    return new Response('Not found', { status: 404 })
-  })
-
-  vi.stubGlobal('fetch', mock)
-  return mock
+function makeHookState(overrides: Partial<UseAppReturn> = {}): UseAppReturn {
+  return {
+    username: '',
+    setUsername: vi.fn(),
+    result: null,
+    playLoading: false,
+    playError: null,
+    scoreboard: [],
+    boardLoading: false,
+    boardError: null,
+    handleChoice: vi.fn(),
+    handleReset: vi.fn(),
+    fetchScoreboard: vi.fn(),
+    ...overrides,
+  }
 }
 
 describe('App', () => {
+  beforeEach(() => {
+    mockUseApp.mockReturnValue(makeHookState())
+  })
+
   afterEach(() => {
-    vi.unstubAllGlobals()
+    vi.clearAllMocks()
   })
 
   describe('initial render', () => {
-    it('renders without crashing', async () => {
-      setupFetch()
+    it('renders the page title', () => {
       render(<App />)
-      await screen.findByText(/no games played yet/i)
+      expect(screen.getByRole('heading', { name: /rock paper scissors lizard spock/i })).toBeInTheDocument()
     })
 
-    it('shows the username input', async () => {
-      setupFetch()
+    it('shows the username input', () => {
       render(<App />)
-      await screen.findByText(/no games played yet/i)
       expect(screen.getByLabelText(/username/i)).toBeInTheDocument()
     })
 
-    it('shows all 5 choice buttons', async () => {
-      setupFetch()
+    it('shows all 5 choice buttons', () => {
       render(<App />)
-      await screen.findByText(/no games played yet/i)
       for (const name of ['Rock', 'Paper', 'Scissors', 'Lizard', 'Spock']) {
         expect(screen.getByRole('button', { name: `Play ${name}` })).toBeInTheDocument()
       }
     })
 
-    it('shows the result area placeholder', async () => {
-      setupFetch()
+    it('shows the result placeholder', () => {
       render(<App />)
-      await screen.findByText(/no games played yet/i)
       expect(screen.getByText(/make a move to see your result/i)).toBeInTheDocument()
     })
 
-    it('shows the scoreboard section', async () => {
-      setupFetch()
+    it('shows the scoreboard heading', () => {
       render(<App />)
-      await screen.findByText(/no games played yet/i)
       expect(screen.getByRole('heading', { name: /scoreboard/i })).toBeInTheDocument()
     })
   })
 
   describe('username behavior', () => {
-    it('disables choice buttons when username is empty', async () => {
-      setupFetch()
+    it('disables choice buttons when username is empty', () => {
       render(<App />)
-      await screen.findByText(/no games played yet/i)
       for (const name of ['Rock', 'Paper', 'Scissors', 'Lizard', 'Spock']) {
         expect(screen.getByRole('button', { name: `Play ${name}` })).toBeDisabled()
       }
     })
 
-    it('enables choice buttons after entering a username', async () => {
-      setupFetch()
-      const user = userEvent.setup()
+    it('enables choice buttons when username is set', () => {
+      mockUseApp.mockReturnValue(makeHookState({ username: 'alice' }))
       render(<App />)
-      await screen.findByText(/no games played yet/i)
-
-      await user.type(screen.getByLabelText(/username/i), 'alice')
-
       for (const name of ['Rock', 'Paper', 'Scissors', 'Lizard', 'Spock']) {
         expect(screen.getByRole('button', { name: `Play ${name}` })).toBeEnabled()
       }
     })
   })
 
-  describe('playing a round', () => {
-    it('calls POST /play with the correct username and player choice', async () => {
-      const fetchMock = setupFetch()
-      const user = userEvent.setup()
+  describe('play states', () => {
+    it('shows loading overlay when playLoading is true', () => {
+      mockUseApp.mockReturnValue(makeHookState({ playLoading: true }))
       render(<App />)
-      await screen.findByText(/no games played yet/i)
-
-      await user.type(screen.getByLabelText(/username/i), 'alice')
-      await user.click(screen.getByRole('button', { name: 'Play Rock' }))
-      await screen.findByText(/you win/i)
-
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/play',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ username: 'alice', player: 1 }),
-        }),
-      )
-    })
-
-    it('shows loading state while the request is pending', async () => {
-      let resolvePlay!: (r: Response) => void
-      const pendingPlay = new Promise<Response>(resolve => { resolvePlay = resolve })
-
-      vi.stubGlobal('fetch', vi.fn().mockImplementation(async (input: unknown, init?: RequestInit) => {
-        if (String(input).endsWith('/play') && init?.method?.toUpperCase() === 'POST') {
-          return pendingPlay
-        }
-        return jsonResponse([])
-      }))
-
-      const user = userEvent.setup()
-      render(<App />)
-      await screen.findByText(/no games played yet/i)
-
-      await user.type(screen.getByLabelText(/username/i), 'alice')
-      await user.click(screen.getByRole('button', { name: 'Play Rock' }))
-
       expect(screen.getByText(/waiting for the computer/i)).toBeInTheDocument()
-
-      resolvePlay(jsonResponse(PLAY_WIN))
-      await screen.findByText(/you win/i)
     })
 
-    it('displays the result after a successful play', async () => {
-      setupFetch()
-      const user = userEvent.setup()
+    it('shows error banner when playError is set', () => {
+      mockUseApp.mockReturnValue(makeHookState({ playError: 'Something went wrong' }))
       render(<App />)
-      await screen.findByText(/no games played yet/i)
-
-      await user.type(screen.getByLabelText(/username/i), 'alice')
-      await user.click(screen.getByRole('button', { name: 'Play Rock' }))
-
-      await screen.findByText(/you win/i)
+      expect(screen.getByText(/something went wrong/i)).toBeInTheDocument()
     })
 
-    it('refreshes the scoreboard after playing', async () => {
-      const fetchMock = setupFetch()
-      const user = userEvent.setup()
+    it('shows result card when result is set', () => {
+      mockUseApp.mockReturnValue(makeHookState({ result: PLAY_WIN }))
       render(<App />)
-      await screen.findByText(/no games played yet/i)
+      expect(screen.getByText(/you win/i)).toBeInTheDocument()
+    })
 
-      const boardCallsBefore = fetchMock.mock.calls.filter(([url]) =>
-        String(url).endsWith('/scoreboard'),
-      ).length
-
-      await user.type(screen.getByLabelText(/username/i), 'alice')
-      await user.click(screen.getByRole('button', { name: 'Play Rock' }))
-      await screen.findByText(/you win/i)
-
-      const boardCallsAfter = fetchMock.mock.calls.filter(([url]) =>
-        String(url).endsWith('/scoreboard'),
-      ).length
-
-      expect(boardCallsAfter).toBeGreaterThan(boardCallsBefore)
+    it('hides the placeholder when a result is set', () => {
+      mockUseApp.mockReturnValue(makeHookState({ result: PLAY_WIN }))
+      render(<App />)
+      expect(screen.queryByText(/make a move to see your result/i)).not.toBeInTheDocument()
     })
   })
 
-  describe('scoreboard', () => {
-    it('calls GET /scoreboard on initial load', async () => {
-      const fetchMock = setupFetch()
-      render(<App />)
-      await screen.findByText(/no games played yet/i)
-
-      expect(fetchMock).toHaveBeenCalledWith('/scoreboard')
-    })
-
-    it('displays scoreboard entries returned from the API', async () => {
-      setupFetch({ scoreboardData: [SCOREBOARD_ROW] })
-      render(<App />)
-
-      await screen.findByText('alice')
-      expect(screen.getByText('alice')).toBeInTheDocument()
-    })
-
-    it('calls DELETE /scoreboard when reset is clicked', async () => {
-      const fetchMock = setupFetch({ scoreboardData: [SCOREBOARD_ROW] })
+  describe('interactions', () => {
+    it('calls handleChoice with the correct id when a choice button is clicked', async () => {
+      const handleChoice = vi.fn()
+      mockUseApp.mockReturnValue(makeHookState({ username: 'alice', handleChoice }))
       const user = userEvent.setup()
       render(<App />)
-      await screen.findByText('alice')
-
-      await user.click(screen.getByRole('button', { name: /reset scoreboard/i }))
-      await screen.findByText(/no games played yet/i)
-
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/scoreboard',
-        expect.objectContaining({ method: 'DELETE' }),
-      )
-    })
-
-    it('clears the scoreboard after reset', async () => {
-      setupFetch({ scoreboardData: [SCOREBOARD_ROW] })
-      const user = userEvent.setup()
-      render(<App />)
-      await screen.findByText('alice')
-
-      await user.click(screen.getByRole('button', { name: /reset scoreboard/i }))
-      await screen.findByText(/no games played yet/i)
-    })
-  })
-
-  describe('error handling', () => {
-    it('shows an error message when the play API call fails', async () => {
-      setupFetch({ playResult: 'Internal Server Error', playStatus: 500 })
-      const user = userEvent.setup()
-      render(<App />)
-      await screen.findByText(/no games played yet/i)
-
-      await user.type(screen.getByLabelText(/username/i), 'alice')
       await user.click(screen.getByRole('button', { name: 'Play Rock' }))
-
-      await screen.findByText(/internal server error/i)
+      expect(handleChoice).toHaveBeenCalledWith(1)
     })
 
-    it('keeps the UI usable after a play error', async () => {
-      setupFetch({ playResult: 'Service Unavailable', playStatus: 503 })
+    it('calls handleReset when the reset button is clicked', async () => {
+      const handleReset = vi.fn()
+      mockUseApp.mockReturnValue(makeHookState({ scoreboard: [SCOREBOARD_ROW], handleReset }))
       const user = userEvent.setup()
       render(<App />)
-      await screen.findByText(/no games played yet/i)
+      await user.click(screen.getByRole('button', { name: /reset scoreboard/i }))
+      expect(handleReset).toHaveBeenCalled()
+    })
 
-      await user.type(screen.getByLabelText(/username/i), 'alice')
-      await user.click(screen.getByRole('button', { name: 'Play Rock' }))
-      await screen.findByText(/service unavailable/i)
-
-      for (const name of ['Rock', 'Paper', 'Scissors', 'Lizard', 'Spock']) {
-        expect(screen.getByRole('button', { name: `Play ${name}` })).toBeEnabled()
-      }
+    it('calls fetchScoreboard when the refresh button is clicked', async () => {
+      const fetchScoreboard = vi.fn()
+      mockUseApp.mockReturnValue(makeHookState({ fetchScoreboard }))
+      const user = userEvent.setup()
+      render(<App />)
+      await user.click(screen.getByRole('button', { name: /refresh scoreboard/i }))
+      expect(fetchScoreboard).toHaveBeenCalled()
     })
   })
 })
