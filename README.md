@@ -187,6 +187,9 @@ The username field is a lightweight identifier — not an authenticated account.
 **No caching**  
 All scoreboard reads hit the database directly to ensure results are always fresh. Given the small dataset (max 10 rows returned) and the challenge's scale, caching adds complexity without meaningful benefit here.
 
+**No custom UI components**
+The UI uses native HTML elements directly rather than wrapping them in custom components (e.g. a `Button` wrapper). The app has no repeated styling variants or shared interactive behaviour that would justify the abstraction overhead.
+
 **Performance considerations**  
 The application intentionally avoids additional optimisation techniques such as React memoization, list virtualization, pagination, and caching because the dataset is intentionally small (only the 10 most recent results are displayed) and rendering costs are negligible for this scale.
 
