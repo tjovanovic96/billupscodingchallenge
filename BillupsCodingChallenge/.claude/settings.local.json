@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd \"c:\\\\Users\\\\Tijana\\\\BillupsCodingChallenge\\\\BillupsCodingChallenge\"; dotnet restore 2>&1 | Select-String -Pattern \"error|Error|restored|Restored\" | ForEach-Object { $_.Line })"
+    ]
+  }
+}
