@@ -205,7 +205,7 @@ Computer choices are sourced from an external random number API (`codechallenge.
 - **JWT authentication** — issue tokens on login to verify identity server-side
 - **Per-user authorisation** — associate results with authenticated accounts and enforce access control
 - **Scoped scoreboard** — allow users to view their personal history in addition to the global feed
-- **Caching** — introduce response caching for the `/choices` endpoint and short-lived caching for the scoreboard at higher traffic volumes
+- **Caching** — Introduce short-lived caching for the scoreboard at higher traffic volumes
 - **Scalability** — pagination, circuit breakers, and horizontal scaling strategies
 - **Real-time scoreboard updates** — use SignalR or lightweight polling to synchronise scoreboard changes across multiple connected clients
 
