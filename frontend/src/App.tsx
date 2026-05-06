@@ -69,7 +69,6 @@ export default function App() {
       </header>
 
       <div className="app-grid">
-        {/* Left: username + choices */}
         <div className="app-left">
           <div className="card">
             <p className="card-title">Player</p>
@@ -89,7 +88,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right: result */}
         <div className="app-right">
           {playLoading && (
             <div className="loading-overlay">
@@ -117,7 +115,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Bottom: full-width scoreboard */}
       <div className="app-bottom">
         <Scoreboard
           entries={scoreboard}

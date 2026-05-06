@@ -21,8 +21,6 @@ const SCOREBOARD_ROW = {
   playedAtUtc: '2024-01-15T10:00:00Z',
 }
 
-// ── Fetch mock helpers ──────────────────────────────────────
-
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -30,10 +28,6 @@ function jsonResponse(data: unknown, status = 200): Response {
   })
 }
 
-/**
- * Stubs global.fetch and returns the mock so tests can inspect calls.
- * All parameters are optional — defaults return an empty scoreboard and a Win.
- */
 function setupFetch({
   scoreboardData = [] as unknown[],
   playResult = PLAY_WIN as unknown,
@@ -48,7 +42,6 @@ function setupFetch({
     const method = (init?.method ?? 'GET').toUpperCase()
 
     if (url.endsWith('/play') && method === 'POST') {
-      // Return plain text for error responses so handleResponse picks up the message
       if (playStatus >= 400) return new Response(String(playResult), { status: playStatus })
       return jsonResponse(playResult)
     }
@@ -68,14 +61,11 @@ function setupFetch({
   return mock
 }
 
-// ── Tests ───────────────────────────────────────────────────
-
 describe('App', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  // 1. Initial render ─────────────────────────────────────────
   describe('initial render', () => {
     it('renders without crashing', async () => {
       setupFetch()
@@ -114,7 +104,6 @@ describe('App', () => {
     })
   })
 
-  // 2. Username behavior ──────────────────────────────────────
   describe('username behavior', () => {
     it('disables choice buttons when username is empty', async () => {
       setupFetch()
@@ -139,7 +128,6 @@ describe('App', () => {
     })
   })
 
-  // 3. Playing a round ────────────────────────────────────────
   describe('playing a round', () => {
     it('calls POST /play with the correct username and player choice', async () => {
       const fetchMock = setupFetch()
@@ -218,7 +206,6 @@ describe('App', () => {
     })
   })
 
-  // 4. Scoreboard ─────────────────────────────────────────────
   describe('scoreboard', () => {
     it('calls GET /scoreboard on initial load', async () => {
       const fetchMock = setupFetch()
@@ -262,7 +249,6 @@ describe('App', () => {
     })
   })
 
-  // 5. Error handling ─────────────────────────────────────────
   describe('error handling', () => {
     it('shows an error message when the play API call fails', async () => {
       setupFetch({ playResult: 'Internal Server Error', playStatus: 500 })
