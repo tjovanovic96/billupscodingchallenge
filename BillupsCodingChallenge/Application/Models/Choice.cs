@@ -11,7 +11,7 @@ public class Choice
         Name = type.ToString()
     };
 
-    public static IReadOnlyList<Choice> All =>
+    public static IReadOnlyList<Choice> All { get; } =
         Enum.GetValues<ChoiceType>()
             .Select(FromChoiceType)
             .ToList();
