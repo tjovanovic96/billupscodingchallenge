@@ -4,6 +4,8 @@ using BillupsCodingChallenge.Application.Interfaces;
 using BillupsCodingChallenge.Application.Services;
 using BillupsCodingChallenge.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Extensions.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +30,21 @@ builder.Services.AddControllers()
 builder.Services.AddHttpClient<IRandomApiService, RandomApiService>(client =>
 {
     client.BaseAddress = new Uri("https://codechallenge.boohma.com/");
-});
+})
+.AddPolicyHandler((services, _) =>
+    HttpPolicyExtensions
+        .HandleTransientHttpError()   // HttpRequestException, 5xx, 408
+        .WaitAndRetryAsync(
+            retryCount: 3,
+            sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
+            onRetry: (outcome, delay, attempt, _) =>
+                services
+                    .GetRequiredService<ILogger<RandomApiService>>()
+                    .LogWarning(
+                        "Random API transient failure on attempt {Attempt} ({Reason}). Retrying in {Delay:F1}s.",
+                        attempt,
+                        outcome.Exception?.Message ?? $"HTTP {(int)outcome.Result!.StatusCode}",
+                        delay.TotalSeconds)));
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -38,6 +54,11 @@ builder.Services.AddScoped<IPlayService, PlayService>();
 builder.Services.AddScoped<IScoreboardService, ScoreboardService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ErrorHandlingMiddleware>();
