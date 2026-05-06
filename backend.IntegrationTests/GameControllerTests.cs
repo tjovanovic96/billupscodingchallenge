@@ -126,6 +126,42 @@ public class GameControllerTests : IClassFixture<GameApiFactory>, IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetChoice_WhenServiceUnavailable_Returns503()
+    {
+        _factory.RandomApiMock
+            .Setup(s => s.GetComputerChoiceAsync())
+            .ThrowsAsync(new HttpRequestException("Connection refused"));
+
+        var response = await _client.GetAsync("/choice");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetChoice_WhenInvalidResponse_Returns502()
+    {
+        _factory.RandomApiMock
+            .Setup(s => s.GetComputerChoiceAsync())
+            .ThrowsAsync(new InvalidOperationException("Unexpected response"));
+
+        var response = await _client.GetAsync("/choice");
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostPlay_WhenServiceUnavailable_Returns503()
+    {
+        _factory.RandomApiMock
+            .Setup(s => s.GetComputerChoiceAsync())
+            .ThrowsAsync(new HttpRequestException("Connection refused"));
+
+        var response = await _client.PostAsJsonAsync("/play", new { username = "Alice", player = 1 });
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
+
+    [Fact]
     public async Task DeleteScoreboard_RemovesAllEntries()
     {
         var now = DateTime.UtcNow;

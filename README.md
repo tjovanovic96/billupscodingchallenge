@@ -115,6 +115,24 @@ docker compose down
 | `GET`    | `/scoreboard` | Returns the 10 most recent game results                  |
 | `DELETE` | `/scoreboard` | Clears all scoreboard entries                            |
 
+### GET /choices — Response
+
+```json
+[
+  { "id": 1, "name": "Rock" },
+  { "id": 2, "name": "Paper" },
+  { "id": 3, "name": "Scissors" },
+  { "id": 4, "name": "Lizard" },
+  { "id": 5, "name": "Spock" }
+]
+```
+
+### GET /choice — Response
+
+```json
+{ "id": 3, "name": "Scissors" }
+```
+
 ### POST /play — Request Body
 
 ```json
@@ -130,11 +148,31 @@ docker compose down
 
 ```json
 {
-  "results": "win",
+  "username": "Alice",
+  "results": "Win",
   "player": 1,
   "computer": 3
 }
 ```
+
+### GET /scoreboard — Response
+
+```json
+[
+  {
+    "id": 42,
+    "username": "Alice",
+    "playerChoiceId": 1,
+    "computerChoiceId": 3,
+    "result": "Win",
+    "playedAtUtc": "2026-05-06T14:23:00Z"
+  }
+]
+```
+
+### DELETE /scoreboard — Response
+
+`204 No Content`
 
 ---
 
