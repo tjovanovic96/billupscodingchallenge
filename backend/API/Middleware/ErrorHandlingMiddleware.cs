@@ -14,19 +14,14 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
         {
             logger.LogError(ex, "Unhandled exception for {Method} {Path}", context.Request.Method, context.Request.Path);
 
-            var (statusCode, title) = ex switch
-            {
-                HttpRequestException => (StatusCodes.Status503ServiceUnavailable, "Random number service is unavailable."),
-                InvalidOperationException => (StatusCodes.Status502BadGateway, "Invalid response from random number service."),
-                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
-            };
+            const int statusCode = StatusCodes.Status500InternalServerError;
 
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/problem+json";
             await context.Response.WriteAsJsonAsync(new ProblemDetails
             {
                 Status = statusCode,
-                Title = title,
+                Title = "An unexpected error occurred.",
                 Detail = ex.Message
             });
         }

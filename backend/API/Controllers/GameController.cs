@@ -24,8 +24,6 @@ public class GameController : ControllerBase
         Ok(Choice.All);
 
     [HttpGet("/choice")]
-    [ProducesResponseType(StatusCodes.Status502BadGateway)]
-    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<Choice>> GetRandomChoice()
     {
         var choice = await _randomApiService.GetComputerChoiceAsync();
@@ -34,17 +32,18 @@ public class GameController : ControllerBase
 
     [HttpPost("/play")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status502BadGateway)]
-    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PlayResult>> Play([FromBody] PlayRequestDto request) =>
         Ok(await _playService.PlayAsync(request.Player, request.Username));
 
     [HttpGet("/scoreboard")]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IReadOnlyList<ScoreboardEntry>>> GetScoreboard() =>
         Ok(await _scoreboardService.GetRecentAsync());
 
     [HttpDelete("/scoreboard")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ClearScoreboard()
     {
         await _scoreboardService.ClearAsync();

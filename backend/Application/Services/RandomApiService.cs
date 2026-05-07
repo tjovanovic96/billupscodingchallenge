@@ -17,18 +17,26 @@ public class RandomApiService : IRandomApiService
 
     public async Task<Choice> GetComputerChoiceAsync()
     {
-        var response = await _httpClient.GetFromJsonAsync<RandomResponse>("random")
-            ?? throw new InvalidOperationException("No response from random number API.");
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<RandomResponse>("random")
+                ?? throw new InvalidOperationException("No response from random number API.");
 
-        _logger.LogDebug("Random API returned {RandomNumber}", response.RandomNumber);
+            _logger.LogDebug("Random API returned {RandomNumber}", response.RandomNumber);
 
-        // Map 1-100 to 1-5: 1-20→1, 21-40→2, 41-60→3, 61-80→4, 81-100→5
-        var choiceId = (response.RandomNumber - 1) / 20 + 1;
-        var choice = Choice.FromChoiceType((ChoiceType)choiceId);
+            // Map 1-100 to 1-5: 1-20→1, 21-40→2, 41-60→3, 61-80→4, 81-100→5
+            var choiceId = (response.RandomNumber - 1) / 20 + 1;
+            var choice = Choice.FromChoiceType((ChoiceType)choiceId);
 
-        _logger.LogDebug("Mapped {RandomNumber} to {Choice}", response.RandomNumber, choice.Name);
+            _logger.LogDebug("Mapped {RandomNumber} to {Choice}", response.RandomNumber, choice.Name);
 
-        return choice;
+            return choice;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Random API failed. Falling back to local random.");
+            return Choice.FromChoiceType((ChoiceType)Random.Shared.Next(1, 6));
+        }
     }
 
     private record RandomResponse([property: JsonPropertyName("random_number")] int RandomNumber);
