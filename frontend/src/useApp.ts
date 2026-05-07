@@ -41,11 +41,18 @@ export function useApp(): UseAppReturn {
   const [boardError, setBoardError] = useState<string | null>(null)
 
   useEffect(() => {
-    setChoicesLoading(true)
-    getChoices()
-      .then((data) => setChoices(data.map((c) => ({ ...c, emoji: EMOJI_MAP[c.id] ?? '?' }))))
-      .catch((err) => setChoicesError(err instanceof Error ? err.message : 'Failed to load choices'))
-      .finally(() => setChoicesLoading(false))
+    const fetchChoices = async () => {
+      setChoicesLoading(true)
+      try {
+        const data = await getChoices()
+        setChoices(data.map((c) => ({ ...c, emoji: EMOJI_MAP[c.id] ?? '?' })))
+      } catch (err) {
+        setChoicesError(err instanceof Error ? err.message : 'Failed to load choices')
+      } finally {
+        setChoicesLoading(false)
+      }
+    }
+    fetchChoices()
   }, [])
 
   const fetchScoreboard = useCallback(async () => {
@@ -65,7 +72,7 @@ export function useApp(): UseAppReturn {
     fetchScoreboard()
   }, [fetchScoreboard])
 
-  async function handleChoice(choiceId: number) {
+  const handleChoice = async (choiceId: number) => {
     setPlayLoading(true)
     setPlayError(null)
     try {
@@ -79,7 +86,7 @@ export function useApp(): UseAppReturn {
     }
   }
 
-  async function handleReset() {
+  const handleReset = async () => {
     setBoardLoading(true)
     setBoardError(null)
     try {
