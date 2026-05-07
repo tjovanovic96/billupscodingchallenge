@@ -1,7 +1,4 @@
-import type { ScoreboardEntry } from '../types'
-import { CHOICES } from './ChoiceButtons'
-
-const CHOICE_NAME = Object.fromEntries(CHOICES.map((c) => [c.id, c.name])) as Record<number, string>
+import type { ChoiceWithEmoji, ScoreboardEntry } from '../types'
 
 function formatDate(utcString: string): string {
   return new Date(utcString).toLocaleString(undefined, {
@@ -14,13 +11,15 @@ function formatDate(utcString: string): string {
 
 interface ScoreboardProps {
   entries: ScoreboardEntry[]
+  choiceMap: Record<number, ChoiceWithEmoji>
   loading: boolean
   error: string | null
   onReset: () => void
   onRefresh: () => void
 }
 
-export function Scoreboard({ entries, loading, error, onReset, onRefresh }: ScoreboardProps) {
+export function Scoreboard({ entries, choiceMap, loading, error, onReset, onRefresh }: ScoreboardProps) {
+
   return (
     <div className="scoreboard-card">
       <div className="scoreboard-header">
@@ -76,8 +75,8 @@ export function Scoreboard({ entries, loading, error, onReset, onRefresh }: Scor
               {entries.map((entry) => (
                 <tr key={entry.id}>
                   <td>{entry.username}</td>
-                  <td>{CHOICE_NAME[entry.playerChoiceId] ?? entry.playerChoiceId}</td>
-                  <td>{CHOICE_NAME[entry.computerChoiceId] ?? entry.computerChoiceId}</td>
+                  <td>{choiceMap[entry.playerChoiceId]?.name ?? entry.playerChoiceId}</td>
+                  <td>{choiceMap[entry.computerChoiceId]?.name ?? entry.computerChoiceId}</td>
                   <td>
                     <span className={`badge badge-${entry.result.toLowerCase()}`}>
                       {entry.result}

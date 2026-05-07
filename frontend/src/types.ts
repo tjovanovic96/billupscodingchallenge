@@ -3,6 +3,10 @@ export interface Choice {
   name: string;
 }
 
+export interface ChoiceWithEmoji extends Choice {
+  emoji: string;
+}
+
 export type GameOutcome = 'Win' | 'Lose' | 'Tie';
 
 export interface PlayResult {

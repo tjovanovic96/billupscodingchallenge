@@ -1,21 +1,16 @@
-export const CHOICES = [
-  { id: 1, name: 'Rock',     emoji: '🪨' },
-  { id: 2, name: 'Paper',    emoji: '📄' },
-  { id: 3, name: 'Scissors', emoji: '✂️' },
-  { id: 4, name: 'Lizard',   emoji: '🦎' },
-  { id: 5, name: 'Spock',    emoji: '🖖' },
-] as const
+import type { ChoiceWithEmoji } from '../types'
 
 interface ChoiceButtonsProps {
+  choices: ChoiceWithEmoji[]
   disabled: boolean
   loading: boolean
   onChoice: (id: number) => void
 }
 
-export function ChoiceButtons({ disabled, loading, onChoice }: ChoiceButtonsProps) {
+export function ChoiceButtons({ choices, disabled, loading, onChoice }: ChoiceButtonsProps) {
   return (
     <div className="choices-grid">
-      {CHOICES.map((choice) => (
+      {choices.map((choice) => (
         <button
           key={choice.id}
           className="choice-btn"

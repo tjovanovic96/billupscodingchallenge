@@ -6,6 +6,8 @@ import { useApp } from './useApp'
 
 export default function App() {
   const {
+    choices,
+    choiceMap,
     username,
     setUsername,
     result,
@@ -35,6 +37,7 @@ export default function App() {
           <div className="card">
             <p className="card-title">Make Your Move</p>
             <ChoiceButtons
+              choices={choices}
               disabled={!username.trim()}
               loading={playLoading}
               onChoice={handleChoice}
@@ -61,7 +64,7 @@ export default function App() {
           )}
 
           {!playLoading && result && (
-            <ResultCard result={result} />
+            <ResultCard result={result} choiceMap={choiceMap} />
           )}
 
           {!playLoading && !result && !playError && (
@@ -75,6 +78,7 @@ export default function App() {
       <div className="app-bottom">
         <Scoreboard
           entries={scoreboard}
+          choiceMap={choiceMap}
           loading={boardLoading}
           error={boardError}
           onReset={handleReset}

@@ -1,8 +1,20 @@
-import { useState, useEffect, useCallback } from 'react'
-import { play, getScoreboard, resetScoreboard } from './api'
-import type { PlayResult, ScoreboardEntry } from './types'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { getChoices, play, getScoreboard, resetScoreboard } from './api'
+import type { ChoiceWithEmoji, PlayResult, ScoreboardEntry } from './types'
+
+const EMOJI_MAP: Record<number, string> = {
+  1: '🪨',
+  2: '📄',
+  3: '✂️',
+  4: '🦎',
+  5: '🖖',
+}
 
 export interface UseAppReturn {
+  choices: ChoiceWithEmoji[]
+  choiceMap: Record<number, ChoiceWithEmoji>
+  choicesLoading: boolean
+  choicesError: string | null
   username: string
   setUsername: (v: string) => void
   result: PlayResult | null
@@ -17,6 +29,9 @@ export interface UseAppReturn {
 }
 
 export function useApp(): UseAppReturn {
+  const [choices, setChoices] = useState<ChoiceWithEmoji[]>([])
+  const [choicesLoading, setChoicesLoading] = useState(false)
+  const [choicesError, setChoicesError] = useState<string | null>(null)
   const [username, setUsername] = useState('')
   const [result, setResult] = useState<PlayResult | null>(null)
   const [playLoading, setPlayLoading] = useState(false)
@@ -24,6 +39,14 @@ export function useApp(): UseAppReturn {
   const [scoreboard, setScoreboard] = useState<ScoreboardEntry[]>([])
   const [boardLoading, setBoardLoading] = useState(false)
   const [boardError, setBoardError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setChoicesLoading(true)
+    getChoices()
+      .then((data) => setChoices(data.map((c) => ({ ...c, emoji: EMOJI_MAP[c.id] ?? '?' }))))
+      .catch((err) => setChoicesError(err instanceof Error ? err.message : 'Failed to load choices'))
+      .finally(() => setChoicesLoading(false))
+  }, [])
 
   const fetchScoreboard = useCallback(async () => {
     setBoardLoading(true)
@@ -70,7 +93,16 @@ export function useApp(): UseAppReturn {
     }
   }
 
+  const choiceMap = useMemo(
+    () => Object.fromEntries(choices.map((c) => [c.id, c])),
+    [choices]
+  )
+
   return {
+    choices,
+    choiceMap,
+    choicesLoading,
+    choicesError,
     username,
     setUsername,
     result,

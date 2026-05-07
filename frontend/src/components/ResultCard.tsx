@@ -1,24 +1,19 @@
-import type { PlayResult, GameOutcome } from '../types'
-import { CHOICES } from './ChoiceButtons'
-
-const CHOICE_MAP = Object.fromEntries(CHOICES.map((c) => [c.id, c])) as Record<
-  number,
-  { id: number; name: string; emoji: string }
->
+import type { ChoiceWithEmoji, PlayResult, GameOutcome } from '../types'
 
 const OUTCOME_CONFIG: Record<GameOutcome, { label: string }> = {
   Win:  { label: 'You Win' },
   Lose: { label: 'You Lose' },
-  Tie:  { label: "Tie" },
+  Tie:  { label: 'Tie' },
 }
 
 interface ResultCardProps {
   result: PlayResult
+  choiceMap: Record<number, ChoiceWithEmoji>
 }
 
-export function ResultCard({ result }: ResultCardProps) {
-  const player   = CHOICE_MAP[result.player]
-  const computer = CHOICE_MAP[result.computer]
+export function ResultCard({ result, choiceMap }: ResultCardProps) {
+  const player   = choiceMap[result.player]
+  const computer = choiceMap[result.computer]
   const outcome  = OUTCOME_CONFIG[result.results]
 
   return (

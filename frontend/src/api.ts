@@ -1,4 +1,4 @@
-import type { PlayResult, ScoreboardEntry } from './types';
+import type { Choice, PlayResult, ScoreboardEntry } from './types';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
@@ -15,6 +15,11 @@ async function handleResponse<T>(res: Response): Promise<T> {
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
+}
+
+export async function getChoices(): Promise<Choice[]> {
+  const res = await fetch(`${BASE_URL}/choices`);
+  return handleResponse<Choice[]>(res);
 }
 
 export async function play(username: string, player: number): Promise<PlayResult> {
