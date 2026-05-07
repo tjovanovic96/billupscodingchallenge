@@ -10,6 +10,16 @@ import { useApp } from './useApp'
 
 const mockUseApp = vi.mocked(useApp)
 
+const CHOICES = [
+  { id: 1, name: 'Rock',     emoji: '🪨' },
+  { id: 2, name: 'Paper',    emoji: '📄' },
+  { id: 3, name: 'Scissors', emoji: '✂️' },
+  { id: 4, name: 'Lizard',   emoji: '🦎' },
+  { id: 5, name: 'Spock',    emoji: '🖖' },
+]
+
+const CHOICE_MAP = Object.fromEntries(CHOICES.map((c) => [c.id, c]))
+
 const PLAY_WIN = {
   username: 'alice',
   results: 'Win' as const,
@@ -28,6 +38,10 @@ const SCOREBOARD_ROW = {
 
 function makeHookState(overrides: Partial<UseAppReturn> = {}): UseAppReturn {
   return {
+    choices: CHOICES,
+    choiceMap: CHOICE_MAP,
+    choicesLoading: false,
+    choicesError: null,
     username: '',
     setUsername: vi.fn(),
     result: null,

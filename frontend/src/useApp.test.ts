@@ -4,11 +4,20 @@ import { useApp } from './useApp'
 
 vi.mock('./api')
 
-import { play, getScoreboard, resetScoreboard } from './api'
+import { play, getScoreboard, resetScoreboard, getChoices } from './api'
 
 const mockPlay = vi.mocked(play)
 const mockGetScoreboard = vi.mocked(getScoreboard)
 const mockResetScoreboard = vi.mocked(resetScoreboard)
+const mockGetChoices = vi.mocked(getChoices)
+
+const API_CHOICES = [
+  { id: 1, name: 'Rock' },
+  { id: 2, name: 'Paper' },
+  { id: 3, name: 'Scissors' },
+  { id: 4, name: 'Lizard' },
+  { id: 5, name: 'Spock' },
+]
 
 const PLAY_WIN = {
   username: 'alice',
@@ -28,6 +37,7 @@ const SCOREBOARD_ROW = {
 
 describe('useApp', () => {
   beforeEach(() => {
+    mockGetChoices.mockResolvedValue(API_CHOICES)
     mockGetScoreboard.mockResolvedValue([])
     mockPlay.mockResolvedValue(PLAY_WIN)
     mockResetScoreboard.mockResolvedValue(undefined)
@@ -35,6 +45,43 @@ describe('useApp', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
+  })
+
+  describe('choices fetch', () => {
+    it('calls getChoices on mount', async () => {
+      renderHook(() => useApp())
+      await waitFor(() => expect(mockGetChoices).toHaveBeenCalledTimes(1))
+    })
+
+    it('populates choices with emoji merged from local map', async () => {
+      const { result } = renderHook(() => useApp())
+      await waitFor(() => expect(result.current.choices).toHaveLength(5))
+      expect(result.current.choices).toEqual([
+        { id: 1, name: 'Rock',     emoji: '🪨' },
+        { id: 2, name: 'Paper',    emoji: '📄' },
+        { id: 3, name: 'Scissors', emoji: '✂️' },
+        { id: 4, name: 'Lizard',   emoji: '🦎' },
+        { id: 5, name: 'Spock',    emoji: '🖖' },
+      ])
+    })
+
+    it('builds choiceMap keyed by id from fetched choices', async () => {
+      const { result } = renderHook(() => useApp())
+      await waitFor(() => expect(result.current.choices).toHaveLength(5))
+      expect(result.current.choiceMap[1]).toMatchObject({ id: 1, name: 'Rock' })
+      expect(result.current.choiceMap[5]).toMatchObject({ id: 5, name: 'Spock' })
+    })
+
+    it('sets choicesError when getChoices fails', async () => {
+      mockGetChoices.mockRejectedValue(new Error('Failed to load choices'))
+      const { result } = renderHook(() => useApp())
+      await waitFor(() => expect(result.current.choicesError).toBe('Failed to load choices'))
+    })
+
+    it('sets choicesLoading to false after fetch completes', async () => {
+      const { result } = renderHook(() => useApp())
+      await waitFor(() => expect(result.current.choicesLoading).toBe(false))
+    })
   })
 
   describe('initial fetch', () => {
