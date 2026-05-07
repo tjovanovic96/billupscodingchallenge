@@ -16,7 +16,7 @@ public class PlayService : IPlayService
         _scoreboardService = scoreboardService;
     }
 
-    public async Task<PlayResult> PlayAsync(string? username, int playerChoiceId)
+    public async Task<PlayResult> PlayAsync(int playerChoiceId, string? username)
     {
         var playerChoice = Choice.FromChoiceType((ChoiceType)playerChoiceId);
         var computerChoice = await _randomApiService.GetComputerChoiceAsync();

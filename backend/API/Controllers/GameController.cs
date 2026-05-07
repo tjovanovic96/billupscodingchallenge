@@ -37,7 +37,7 @@ public class GameController : ControllerBase
     [ProducesResponseType(StatusCodes.Status502BadGateway)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<ActionResult<PlayResult>> Play([FromBody] PlayRequestDto request) =>
-        Ok(await _playService.PlayAsync(request.Username, request.Player));
+        Ok(await _playService.PlayAsync(request.Player, request.Username));
 
     [HttpGet("/scoreboard")]
     public async Task<ActionResult<IReadOnlyList<ScoreboardEntry>>> GetScoreboard() =>
