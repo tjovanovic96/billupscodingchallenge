@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using BillupsCodingChallenge.API.Middleware;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using BillupsCodingChallenge.Application.Interfaces;
 using BillupsCodingChallenge.Application.Services;
 using BillupsCodingChallenge.Infrastructure.Data;
@@ -26,6 +28,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddHttpClient<IRandomApiService, RandomApiService>(client =>
 {
