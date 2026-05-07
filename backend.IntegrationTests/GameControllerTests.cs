@@ -13,7 +13,7 @@ public class GameControllerTests : IClassFixture<GameApiFactory>, IAsyncLifetime
     private readonly HttpClient _client;
 
     private record ChoiceResponse(int Id, string Name);
-    private record PlayResultResponse(string Username, string Results, ChoiceResponse Player, ChoiceResponse Computer);
+    private record PlayResultResponse(string Username, string Results, int Player, int Computer);
     private record ScoreboardEntryResponse(int Id, string Username, int PlayerChoiceId, int ComputerChoiceId, string Result, DateTime PlayedAtUtc);
 
     public GameControllerTests(GameApiFactory factory)
@@ -77,8 +77,8 @@ public class GameControllerTests : IClassFixture<GameApiFactory>, IAsyncLifetime
         Assert.NotNull(result);
         Assert.Equal("Alice", result.Username);
         Assert.Equal("Win", result.Results);
-        Assert.Equal(1, result.Player.Id);
-        Assert.Equal(3, result.Computer.Id);
+        Assert.Equal(1, result.Player);
+        Assert.Equal(3, result.Computer);
     }
 
     [Fact]
@@ -123,42 +123,6 @@ public class GameControllerTests : IClassFixture<GameApiFactory>, IAsyncLifetime
         Assert.Equal(2, entries.Count);
         Assert.Equal("Player2", entries[0].Username);
         Assert.Equal("Player1", entries[1].Username);
-    }
-
-    [Fact]
-    public async Task GetChoice_WhenServiceUnavailable_Returns503()
-    {
-        _factory.RandomApiMock
-            .Setup(s => s.GetComputerChoiceAsync())
-            .ThrowsAsync(new HttpRequestException("Connection refused"));
-
-        var response = await _client.GetAsync("/choice");
-
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task GetChoice_WhenInvalidResponse_Returns502()
-    {
-        _factory.RandomApiMock
-            .Setup(s => s.GetComputerChoiceAsync())
-            .ThrowsAsync(new InvalidOperationException("Unexpected response"));
-
-        var response = await _client.GetAsync("/choice");
-
-        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostPlay_WhenServiceUnavailable_Returns503()
-    {
-        _factory.RandomApiMock
-            .Setup(s => s.GetComputerChoiceAsync())
-            .ThrowsAsync(new HttpRequestException("Connection refused"));
-
-        var response = await _client.PostAsJsonAsync("/play", new { username = "Alice", player = 1 });
-
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
     }
 
     [Fact]

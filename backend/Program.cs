@@ -65,8 +65,9 @@ builder.Services.AddScoped<IScoreboardService, ScoreboardService>();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    using var scope = app.Services.CreateScope();
     scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
 }
 
