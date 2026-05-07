@@ -217,11 +217,11 @@ Computer choices are sourced from an external random number API (`codechallenge.
 
 ```bash
 # Unit tests
-cd BillupsCodingChallenge.UnitTests
+cd backend.UnitTests
 dotnet test
 
 # Integration tests
-cd BillupsCodingChallenge.IntegrationTests
+cd backend.IntegrationTests
 dotnet test
 ```
 
