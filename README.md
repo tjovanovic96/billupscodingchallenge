@@ -196,7 +196,7 @@ The application intentionally avoids additional optimisation techniques such as 
 In a larger-scale application, these optimisations would be evaluated based on profiling and real usage patterns.
 
 **External random number API**  
-Computer choices are sourced from an external random number API (`codechallenge.boohma.com`). Polly is configured with a retry policy (3 attempts, exponential backoff) to handle transient failures gracefully. If the API is unavailable, the service returns an appropriate error response rather than silently failing.
+Computer choices are sourced from an external random number API (`codechallenge.boohma.com`). Polly is configured with a retry policy (3 attempts, exponential backoff) to handle transient failures gracefully. If all retries are exhausted, the service falls back to a local random number generator so the game remains playable. The failure is logged as a warning for observability.
 
 ---
 
