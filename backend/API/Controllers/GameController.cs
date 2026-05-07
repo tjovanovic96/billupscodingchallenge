@@ -19,10 +19,12 @@ public class GameController : ControllerBase
         _scoreboardService = scoreboardService;
     }
 
+    /// <summary>Returns all available choices (Rock, Paper, Scissors, Lizard, Spock).</summary>
     [HttpGet("/choices")]
     public ActionResult<IReadOnlyList<Choice>> GetChoices() =>
         Ok(Choice.All);
 
+    /// <summary>Returns a randomly selected computer choice using the external random number API, with local random fallback.</summary>
     [HttpGet("/choice")]
     public async Task<ActionResult<Choice>> GetRandomChoice()
     {
@@ -30,17 +32,20 @@ public class GameController : ControllerBase
         return Ok(choice);
     }
 
+    /// <summary>Plays a round of Rock Paper Scissors Lizard Spock and records the result to the scoreboard.</summary>
     [HttpPost("/play")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PlayResult>> Play([FromBody] PlayRequestDto request) =>
         Ok(await _playService.PlayAsync(request.Player, request.Username));
 
+    /// <summary>Returns the 10 most recent scoreboard entries.</summary>
     [HttpGet("/scoreboard")]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IReadOnlyList<ScoreboardEntry>>> GetScoreboard() =>
         Ok(await _scoreboardService.GetRecentAsync());
 
+    /// <summary>Clears all scoreboard entries.</summary>
     [HttpDelete("/scoreboard")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
